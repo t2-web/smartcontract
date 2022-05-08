@@ -1,0 +1,36 @@
+{
+  "name": "smart-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "compile": "truffle compile",
+    "deploy": "truffle migrate --network production",
+    "mint": "hardhat run scripts/mint.js",
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "hungvu",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "lite-server": "^2.6.1",
+    "truffle": "^5.3.1",
+    "truffle-flattener": "^1.5.0"
+  },
+  "dependencies": {
+    "@chainlink/contracts": "^0.4.0",
+    "@nomiclabs/hardhat-truffle5": "^2.0.5",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "@openzeppelin/contracts": "^3.2.0",
+    "@truffle/hdwallet-provider": "^1.4.0",
+    "dotenv": "^8.2.0",
+    "ethers": "^5.3.0",
+    "hardhat": "2.4.0",
+    "hardhat-deploy": "^0.8.6",
+    "truffle-hdwallet-provider": "^1.0.17"
+  }
+}
