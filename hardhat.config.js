@@ -5,7 +5,7 @@ require('@nomiclabs/hardhat-truffle5')
  */
 module.exports = {
   solidity: {
-    version: '0.6.9',
+    version: '0.8.10',
     settings: {
       optimizer: {
         enabled: true,
