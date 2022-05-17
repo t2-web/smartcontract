@@ -4,7 +4,9 @@
   "description": "",
   "scripts": {
     "compile": "truffle compile",
-    "deploy": "truffle migrate --network production",
+    "deploy-eth": "truffle migrate --network eth",
+    "deploy-bsc": "truffle migrate --network bsc",
+    "deploy-polygon": "truffle migrate --network polygon",
     "test": "truffle test"
   },
   "repository": {

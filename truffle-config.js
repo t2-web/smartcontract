@@ -1,40 +1,46 @@
-require('dotenv').config()
+require("dotenv").config();
 
-const HDWalletProvider = require('@truffle/hdwallet-provider')
+const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 module.exports = {
   networks: {
-    development: {
-      host: '127.0.0.1',
-      port: 9545,
-      network_id: '*'
-    },
-
-    production: {
-      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, process.env.NODE_URL),
-      network_id: '80001',
+    eth: {
+      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, process.env.ETH_NODE_URL),
+      network_id: "4",
       gasPrice: process.env.GAS_PRICE,
-      skipDryRun: true
-    }
+      skipDryRun: true,
+    },
+    bsc: {
+      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, process.env.BSC_NODE_URL),
+      network_id: "97",
+      gasPrice: 0,
+      skipDryRun: true,
+    },
+    polygon: {
+      provider: () => new HDWalletProvider(process.env.PRIVATE_KEY, process.env.POLYGON_NODE_URL),
+      network_id: "80001",
+      gasPrice: process.env.GAS_PRICE,
+      skipDryRun: true,
+    },
   },
 
   mocha: {
-    timeout: 100000
+    timeout: 100000,
   },
 
   compilers: {
     solc: {
-      version: '0.8.10',
+      version: "0.8.10",
       settings: {
         optimizer: {
           enabled: true,
-          runs: 200
-        }
-      }
-    }
+          runs: 200,
+        },
+      },
+    },
   },
 
   db: {
-    enabled: false
-  }
-}
+    enabled: false,
+  },
+};

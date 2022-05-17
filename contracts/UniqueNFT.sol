@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract DodoNFT is ERC721URIStorage, Ownable {
+contract UniqueNFT is ERC721URIStorage, Ownable {
 
   using Counters for Counters.Counter;
 
@@ -39,5 +39,10 @@ contract DodoNFT is ERC721URIStorage, Ownable {
     _safeMint(to, tokenId);
     _setTokenURI(tokenId, tokenURI);
     return tokenId;
+  }
+
+  function burn(uint256 tokenId) public {
+    require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not owner nor approved");
+    _burn(tokenId);
   }
 }
