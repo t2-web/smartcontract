@@ -8,6 +8,7 @@
     "deploy-bsc": "truffle migrate --network bsc",
     "deploy-polygon": "truffle migrate --network polygon",
     "deploy-rinkeby": "truffle migrate --network rinkeby",
+    "deploy-shibuya": "truffle migrate --network shibuya",
     "test": "truffle test"
   },
   "repository": {

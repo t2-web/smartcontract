@@ -32,12 +32,22 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           process.env.PRIVATE_KEY,
-          'https://rinkeby.infura.io/v3/99ed327c292e423e874eac228a240137'
+          "https://rinkeby.infura.io/v3/99ed327c292e423e874eac228a240137"
         ),
       network_id: 4,
       gas: 5500000,
       confirmations: 2,
       timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    shibuya: {
+      provider: () =>
+        new HDWalletProvider(
+          process.env.PRIVATE_KEY,
+          process.env.ASTAR_NODE_URL
+        ),
+      network_id: "81",
+      gasPrice: process.env.GAS_PRICE,
       skipDryRun: true,
     },
   },

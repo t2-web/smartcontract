@@ -19,11 +19,15 @@ contract MultiNFT is ERC1155URIStorage, Ownable {
     return _tokenIdTracker.current();
   }
 
-  function mintItem(address to, string memory tokenURI, uint256 amount) public returns (uint256) {
+  function tokenURI(uint256 tokenId) public view returns (string memory) {
+    return uri(tokenId);
+  }
+
+  function mintItem(address to, string memory uri, uint256 amount) public returns (uint256) {
     _tokenIdTracker.increment();
     uint256 tokenId = _tokenIdTracker.current();
     _mint(to, tokenId, amount, "");
-    _setURI(tokenId, tokenURI);
+    _setURI(tokenId, uri);
     return tokenId;
   }
 
