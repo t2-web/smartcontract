@@ -1,7 +1,7 @@
 var UniqueNFT = artifacts.require("UniqueNFT");
 var MultiNFT = artifacts.require("MultiNFT");
 
-var BASE_URI = "https://t2web.mypinata.cloud/ipfs/";
+var BASE_URI = process.env.BASE_URI || "https://t2web.mypinata.cloud/ipfs/";
 
 module.exports = function (deployer) {
   console.log("Deploying UniqueNFT...");
