@@ -4,7 +4,6 @@
   "description": "",
   "scripts": {
     "compile": "truffle compile",
-    "deploy-eth": "truffle migrate --network eth",
     "deploy-bsc": "truffle migrate --network bsc",
     "deploy-polygon": "truffle migrate --network polygon",
     "deploy-rinkeby": "truffle migrate --network rinkeby",
