@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MultiNFT is ERC1155URIStorage, Ownable {
+contract T2WebMultiNFT is ERC1155URIStorage, Ownable {
 
   using Counters for Counters.Counter;
 
