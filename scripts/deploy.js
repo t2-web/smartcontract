@@ -8,7 +8,8 @@ const DEFAULT_CONFIG = {
   Disperse: "",
   T2WebProjectManager: "",
   OPERATOR: "",
-  SIGNER: ""
+  SIGNER: "",
+  FEE_RECEIVER: ""
 }
 
 async function main() {
@@ -16,8 +17,10 @@ async function main() {
   let networkName = hre.network.name;
   let suffixConfig = `${envName}`;
   let deployConfig = deployUtils.loadConfig(networkName, DEFAULT_CONFIG, suffixConfig);
+
   deployConfig.OPERATOR = "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE";
   deployConfig.SIGNER = "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE";
+  deployConfig.FEE_RECEIVER = "0xf27527E01508645d79D26324f72A516778838c26"; // key: 8c6e7f8d70554c3358af02ddeb99aad71244bd7cd3b9903fe483e3e3d0bcd69e
 
   // // ERC-721
   // const deployT2WebNFT = await deployUtils.deployContractIfNotExist("T2WebNFT", deployConfig.T2WebNFT);
@@ -36,7 +39,11 @@ async function main() {
   // deployConfig.Disperse = deployDisperse.address;
 
   // T2WebProjectManager
-  const deployT2WebProjectManager = await deployUtils.deployContractIfNotExist("T2WebProjectManager", deployConfig.T2WebProjectManager, [deployConfig.SIGNER]);
+  const deployT2WebProjectManager = await deployUtils.deployContractIfNotExist(
+    "T2WebProjectManager",
+    deployConfig.T2WebProjectManager,
+    [ deployConfig.FEE_RECEIVER, deployConfig.SIGNER ]
+  );
   deployConfig.T2WebProjectManager = deployT2WebProjectManager.address;
 
   // Write config

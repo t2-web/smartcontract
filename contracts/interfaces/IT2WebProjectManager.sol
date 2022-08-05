@@ -15,7 +15,8 @@ interface IT2WebProjectManager {
 
   event ProjectRevealed(
     uint256 projectId,
-    bool isRevealed
+    bool isRevealed,
+    string baseTokenURI
   );
 
   event ProjectStarted(
@@ -45,7 +46,8 @@ interface IT2WebProjectManager {
   function createERC721Project(
     uint256 backendId,
     string memory projectName,
-    string[] memory baseTokenURIs,
+    string memory projectSymbol,
+    string memory baseTokenURI,
     uint256[] memory saleData,
     address[] memory whitelists,
     bool canReveal,
@@ -53,7 +55,8 @@ interface IT2WebProjectManager {
   ) external returns (uint256);
 
   function revealProject(
-    uint256 projectId
+    uint256 projectId,
+    string memory baseTokenURI
   ) external;
 
   function startProject(

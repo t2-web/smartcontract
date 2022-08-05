@@ -8,10 +8,6 @@
     "deploy:rinkeby": "npx hardhat run --network rinkeby scripts/deploy.js",
     "deploy:mumbai": "npx hardhat run --network mumbai scripts/deploy.js",
     "deploy:shibuya": "npx hardhat run --network shibuya scripts/deploy.js",
-    "deploy-bsc": "truffle migrate --network bsc",
-    "deploy-polygon": "truffle migrate --network polygon",
-    "deploy-rinkeby": "truffle migrate --network rinkeby",
-    "deploy-shibuya": "truffle migrate --network shibuya",
     "test": "truffle test"
   },
   "repository": {

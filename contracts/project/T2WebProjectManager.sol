@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
@@ -12,17 +12,18 @@ import "../interfaces/IT2WebERC721.sol";
 import "../lib/Signature.sol";
 import "./T2WebERC721.sol";
 
-contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
+contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, ERC721Holder, Ownable {
   using Strings for uint256;
   using Signature for bytes32;
   using Counters for Counters.Counter;
 
+  bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
+  uint256 public constant A_HUNDRED_PERCENT = 10_000; // 100%
+
   Counters.Counter private _projectIdTracker;
 
-  enum ProjectState { NEW, READY, MINTING, STARTED, FINISHED, ERROR }
-
-  address private _signer;
-  address private _operator;
+  enum ProjectState { NEW, READY, CREATED, STARTED, FINISHED, ERROR }
 
   struct Project {
     uint256 id;
@@ -31,7 +32,6 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
     address owner;
     uint256 contractType; // 721, 1155, 4907
     address contractAddress;
-    string baseTokenURI;
     ProjectState state;
     uint256 presaleStartDate;
     uint256 presaleEndDate;
@@ -50,15 +50,26 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
     bool isRevealed;
   }
 
+  address private _feeReceiver;
+  address private _signer;
+
   mapping(uint256 => Project) private _projects;
 
   mapping(uint256 => bool) private _createdProjects;
 
   mapping(uint256 => mapping(address => bool)) private _whitelists;
 
-  constructor(address signer) {
+  modifier notZeroAddress(address account) {
+    require(account != address(0), "ProjectManager: address must not be zero");
+    _;
+  }
+
+  constructor(address feeReceiver, address signer) {
+    address msgSender = _msgSender();
+    _setupRole(DEFAULT_ADMIN_ROLE, msgSender);
+    _setupRole(OPERATOR_ROLE, msgSender);
     _signer = signer;
-    _operator = _msgSender();
+    _feeReceiver = feeReceiver;
   }
 
   receive() external payable {}
@@ -66,7 +77,8 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
   function createERC721Project(
     uint256 backendId,
     string memory projectName,
-    string[] memory baseTokenURIs,
+    string memory projectSymbol,
+    string memory baseTokenURI,
     uint256[] memory saleData,
     address[] memory whitelists,
     bool canReveal,
@@ -90,8 +102,8 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
 
     T2WebERC721 projectContract = new T2WebERC721(
       projectName,
-      "T2WEB",
-      baseTokenURIs[1]
+      projectSymbol,
+      baseTokenURI
     );
 
     _projectIdTracker.increment();
@@ -103,9 +115,8 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
     project.owner = msg.sender;
     project.backendId = backendId;
     project.contractType = 721;
-    project.baseTokenURI = baseTokenURIs[0];
     project.contractAddress = address(projectContract);
-    project.state = ProjectState.MINTING;
+    project.state = ProjectState.CREATED;
 
     project.presaleStartDate = saleData[0];
     project.presaleEndDate = saleData[1];
@@ -128,11 +139,6 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
       _whitelists[projectId][whitelists[i]] = true;
     }
 
-    if (!canReveal) {
-      projectContract.setBaseURI(baseTokenURIs[0]);
-      project.isRevealed = true;
-    }
-
     _createdProjects[project.backendId] = true;
 
     emit ProjectCreated(
@@ -150,18 +156,23 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
   }
 
   function revealProject(
-    uint256 projectId
+    uint256 projectId,
+    string memory baseTokenURI
   ) external {
     Project storage project = _projects[projectId];
 
-    require(project.canReveal, "Not allowed");
-    require(project.owner == msg.sender, "Caller is not project owner");
-    require(!project.isRevealed, "Already revealed");
+    require(project.canReveal, "ProjectManager: not allowed");
+    require(project.owner == msg.sender, "ProjectManager: caller is not project owner");
+    require(!project.isRevealed, "ProjectManager: already revealed");
 
-    IT2WebERC721(project.contractAddress).setBaseURI(project.baseTokenURI);
+    IT2WebERC721(project.contractAddress).setBaseURI(baseTokenURI);
     project.isRevealed = true;
 
-    emit ProjectRevealed(project.id, project.isRevealed);
+    emit ProjectRevealed(
+      project.id,
+      project.isRevealed,
+      baseTokenURI
+    );
   }
 
   function startProject(
@@ -169,8 +180,8 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
   ) external {
     Project storage project = _projects[projectId];
 
-    require(project.owner == msg.sender, "Caller is not project owner");
-    require(project.state == ProjectState.MINTING, "Project state invalid");
+    require(project.owner == msg.sender, "ProjectManager: caller is not project owner");
+    require(project.state == ProjectState.CREATED, "ProjectManager: project state invalid");
 
     project.state = ProjectState.STARTED;
 
@@ -182,9 +193,9 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
   ) external {
     Project storage project = _projects[projectId];
 
-    require(project.owner == msg.sender || _operator == msg.sender,
-      "Caller is not project owner or operator");
-    require(project.state != ProjectState.FINISHED, "Project state invalid");
+    require(project.owner == msg.sender || hasRole(OPERATOR_ROLE, msg.sender),
+      "ProjectManager: caller is not project owner or operator");
+    require(project.state != ProjectState.FINISHED, "ProjectManager: project state invalid");
 
     project.state = ProjectState.FINISHED;
 
@@ -194,25 +205,35 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
   function buyPresale(
     uint256 projectId,
     uint256 amount
-  ) external payable {
+  ) external notZeroAddress(_msgSender()) payable {
     Project storage project = _projects[projectId];
+    address buyer = _msgSender();
 
-    require(project.state == ProjectState.STARTED, "Project state invalid");
+    require(project.state == ProjectState.STARTED, "ProjectManager: project state invalid");
     require(block.timestamp >= project.presaleStartDate &&
       block.timestamp <= project.presaleEndDate, "PRESALE_NOT_ALLOWED");
     require(amount > 0 && amount <= project.presaleMaxPurchase, "AMOUNT_INVALID");
     require(project.presaleAmount >= project.presaleSold + amount, "AMOUNT_INVALID");
-    require(_whitelists[projectId][_msgSender()], "Caller is not whitelisted");
+    require(_whitelists[projectId][buyer], "ProjectManager: caller is not whitelisted");
+
+    uint256 totalPrice = project.presalePrice * amount;
+    require(msg.value == totalPrice, "ProjectManager: amount does not match with price");
+
+    uint256 fee = (totalPrice * project.fee) / A_HUNDRED_PERCENT;
+    uint256 payout = totalPrice - fee;
+
+    payable(_feeReceiver).transfer(fee);
+    payable(project.owner).transfer(payout);
 
     for (uint i = 0; i < amount; i++) {
-      IT2WebERC721(project.contractAddress).mint(_msgSender());
+      IT2WebERC721(project.contractAddress).mint(buyer);
     }
 
     project.presaleSold = project.presaleSold + amount;
 
     emit ProjectItemPreSold(
       project.id,
-      _msgSender(),
+      buyer,
       amount,
       project.presaleSold
     );
@@ -221,24 +242,34 @@ contract T2WebProjectManager is IT2WebProjectManager, ERC721Holder, Ownable {
   function buy(
     uint256 projectId,
     uint256 amount
-  ) external payable {
+  ) external notZeroAddress(_msgSender()) payable {
     Project storage project = _projects[projectId];
+    address buyer = _msgSender();
 
-    require(project.state == ProjectState.STARTED, "Project state invalid");
+    require(project.state == ProjectState.STARTED, "ProjectManager: project state invalid");
     require(block.timestamp >= project.publicsaleStartDate &&
       block.timestamp <= project.publicsaleEndDate, "PUBLICSALE_NOT_ALLOWED");
     require(amount > 0 && amount <= project.publicsaleMaxPurchase, "AMOUNT_INVALID");
     require(project.publicsaleAmount >= project.publicsaleSold + amount, "AMOUNT_INVALID");
 
+    uint256 totalPrice = project.publicsalePrice * amount;
+    require(msg.value == totalPrice, "ProjectManager: amount does not match with price");
+
+    uint256 fee = (totalPrice * project.fee) / A_HUNDRED_PERCENT;
+    uint256 payout = totalPrice - fee;
+
+    payable(_feeReceiver).transfer(fee);
+    payable(project.owner).transfer(payout);
+
     for (uint i = 0; i < amount; i++) {
-      IT2WebERC721(project.contractAddress).mint(_msgSender());
+      IT2WebERC721(project.contractAddress).mint(buyer);
     }
 
     project.publicsaleSold = project.publicsaleSold + amount;
 
     emit ProjectItemSold(
       project.id,
-      _msgSender(),
+      buyer,
       amount,
       project.publicsaleSold
     );
