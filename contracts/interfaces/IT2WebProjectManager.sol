@@ -76,4 +76,14 @@ interface IT2WebProjectManager {
     uint256 projectId,
     uint256 amount
   ) external payable;
+
+  function getPresaleAmountOf(
+    uint256 projectId,
+    address userAddress
+  ) external view returns (uint256);
+
+  function getPublicsaleAmountOf(
+    uint256 projectId,
+    address userAddress
+  ) external view returns (uint256);
 }

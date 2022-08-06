@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // security for non-reentrant
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -12,7 +13,7 @@ import "../interfaces/IT2WebERC721.sol";
 import "../lib/Signature.sol";
 import "./T2WebERC721.sol";
 
-contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, ERC721Holder, Ownable {
+contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, ReentrancyGuard, ERC721Holder, Ownable {
   using Strings for uint256;
   using Signature for bytes32;
   using Counters for Counters.Counter;
@@ -58,6 +59,10 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, E
   mapping(uint256 => bool) private _createdProjects;
 
   mapping(uint256 => mapping(address => bool)) private _whitelists;
+
+  mapping(uint256 => mapping(address => uint256)) private _presaleAmount;
+
+  mapping(uint256 => mapping(address => uint256)) private _publicsaleAmount;
 
   modifier notZeroAddress(address account) {
     require(account != address(0), "ProjectManager: address must not be zero");
@@ -205,14 +210,15 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, E
   function buyPresale(
     uint256 projectId,
     uint256 amount
-  ) external notZeroAddress(_msgSender()) payable {
+  ) external nonReentrant notZeroAddress(_msgSender()) payable {
     Project storage project = _projects[projectId];
     address buyer = _msgSender();
 
     require(project.state == ProjectState.STARTED, "ProjectManager: project state invalid");
     require(block.timestamp >= project.presaleStartDate &&
       block.timestamp <= project.presaleEndDate, "PRESALE_NOT_ALLOWED");
-    require(amount > 0 && amount <= project.presaleMaxPurchase, "AMOUNT_INVALID");
+    require(_presaleAmount[project.id][buyer] + amount <= project.presaleMaxPurchase,
+      "AMOUNT_OVER_LIMITATION");
     require(project.presaleAmount >= project.presaleSold + amount, "AMOUNT_INVALID");
     require(_whitelists[projectId][buyer], "ProjectManager: caller is not whitelisted");
 
@@ -229,7 +235,8 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, E
       IT2WebERC721(project.contractAddress).mint(buyer);
     }
 
-    project.presaleSold = project.presaleSold + amount;
+    project.presaleSold += amount;
+    _presaleAmount[project.id][buyer] += amount;
 
     emit ProjectItemPreSold(
       project.id,
@@ -242,14 +249,15 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, E
   function buy(
     uint256 projectId,
     uint256 amount
-  ) external notZeroAddress(_msgSender()) payable {
+  ) external nonReentrant notZeroAddress(_msgSender()) payable {
     Project storage project = _projects[projectId];
     address buyer = _msgSender();
 
     require(project.state == ProjectState.STARTED, "ProjectManager: project state invalid");
     require(block.timestamp >= project.publicsaleStartDate &&
       block.timestamp <= project.publicsaleEndDate, "PUBLICSALE_NOT_ALLOWED");
-    require(amount > 0 && amount <= project.publicsaleMaxPurchase, "AMOUNT_INVALID");
+    require(_publicsaleAmount[project.id][buyer] + amount <= project.publicsaleMaxPurchase,
+      "AMOUNT_OVER_LIMITATION");
     require(project.publicsaleAmount >= project.publicsaleSold + amount, "AMOUNT_INVALID");
 
     uint256 totalPrice = project.publicsalePrice * amount;
@@ -265,7 +273,8 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, E
       IT2WebERC721(project.contractAddress).mint(buyer);
     }
 
-    project.publicsaleSold = project.publicsaleSold + amount;
+    project.publicsaleSold += amount;
+    _publicsaleAmount[project.id][buyer] += amount;
 
     emit ProjectItemSold(
       project.id,
@@ -273,5 +282,19 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, E
       amount,
       project.publicsaleSold
     );
+  }
+
+  function getPresaleAmountOf(
+    uint256 projectId,
+    address userAddress
+  ) external view returns (uint256) {
+    return _presaleAmount[projectId][userAddress];
+  }
+
+  function getPublicsaleAmountOf(
+    uint256 projectId,
+    address userAddress
+  ) external view returns (uint256) {
+    return _publicsaleAmount[projectId][userAddress];
   }
 }
