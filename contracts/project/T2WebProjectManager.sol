@@ -99,11 +99,7 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
       msg.sender
     ));
 
-    bytes[] memory signatures = new bytes[](1);
-    signatures[0] = signature;
-    address[] memory signers = new address[](1);
-    signers[0] = _signer;
-    messageHash.verifySignatures(signatures, signers);
+    messageHash.verifySignature(signature, _signer);
 
     T2WebERC721 projectContract = new T2WebERC721(
       projectName,

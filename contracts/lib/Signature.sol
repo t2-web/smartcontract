@@ -31,13 +31,9 @@ library Signature {
     /**
      * @dev Make sure all signatures and signers are valid
      */
-    function verifySignatures(bytes32 msgHash, bytes[] memory signatures, address[] memory signers) internal pure {
-        require(signatures.length == signers.length, "INVALID_LENGTH_SIG");
-
-        for(uint i = 0; i < signatures.length; i++ ) {
-            bytes32 message = prefixed(msgHash);
-            require(recoverSigner(message, signatures[i]) == signers[i], "INVALID_SIGNATURE");
-        }
+    function verifySignature(bytes32 msgHash, bytes memory signature, address signer) internal pure {
+        bytes32 message = prefixed(msgHash);
+        require(recoverSigner(message, signature) == signer, "INVALID_SIGNATURE");
     }
 
 }
