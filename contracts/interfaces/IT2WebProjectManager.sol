@@ -86,4 +86,17 @@ interface IT2WebProjectManager {
     uint256 projectId,
     address userAddress
   ) external view returns (uint256);
+
+  function isWhitelisted(
+    uint256 projectId,
+    address userAddress
+  ) external view returns (bool);
+
+  function getPresaleSoldAmount(
+    uint256 projectId
+  ) external view returns (uint256);
+
+  function getPublicsaleSoldAmount(
+    uint256 projectId
+  ) external view returns (uint256);
 }

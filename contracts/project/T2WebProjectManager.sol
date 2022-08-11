@@ -293,4 +293,25 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
   ) external view returns (uint256) {
     return _publicsaleAmount[projectId][userAddress];
   }
+
+  function isWhitelisted(
+    uint256 projectId,
+    address userAddress
+  ) external view returns (bool) {
+    return _whitelists[projectId][userAddress];
+  }
+
+  function getPresaleSoldAmount(
+    uint256 projectId
+  ) external view returns (uint256) {
+    Project storage project = _projects[projectId];
+    return project.presaleSold;
+  }
+
+  function getPublicsaleSoldAmount(
+    uint256 projectId
+  ) external view returns (uint256) {
+    Project storage project = _projects[projectId];
+    return project.publicsaleSold;
+  }
 }
