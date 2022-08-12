@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 interface IT2WebProjectManager {
   event ProjectCreated(
@@ -19,15 +19,9 @@ interface IT2WebProjectManager {
     string baseTokenURI
   );
 
-  event ProjectStarted(
-    uint256 projectId,
-    uint256 state
-  );
+  event ProjectStarted(uint256 projectId, uint256 state);
 
-  event ProjectClosed(
-    uint256 projectId,
-    uint256 state
-  );
+  event ProjectClosed(uint256 projectId, uint256 state);
 
   event ProjectItemSold(
     uint256 projectId,
@@ -54,49 +48,39 @@ interface IT2WebProjectManager {
     bytes calldata signature
   ) external returns (uint256);
 
-  function revealProject(
-    uint256 projectId,
-    string memory baseTokenURI
-  ) external;
+  function revealProject(uint256 projectId, string memory baseTokenURI)
+    external;
 
-  function startProject(
-    uint256 projectId
-  ) external;
+  function startProject(uint256 projectId) external;
 
-  function closeProject(
-    uint256 projectId
-  ) external;
+  function closeProject(uint256 projectId) external;
 
-  function buyPresale(
-    uint256 projectId,
-    uint256 amount
-  ) external payable;
+  function buyPresale(uint256 projectId, uint256 amount) external payable;
 
-  function buy(
-    uint256 projectId,
-    uint256 amount
-  ) external payable;
+  function buy(uint256 projectId, uint256 amount) external payable;
 
-  function getPresaleAmountOf(
-    uint256 projectId,
-    address userAddress
-  ) external view returns (uint256);
+  function getPresaleAmountOf(uint256 projectId, address userAddress)
+    external
+    view
+    returns (uint256);
 
-  function getPublicsaleAmountOf(
-    uint256 projectId,
-    address userAddress
-  ) external view returns (uint256);
+  function getPublicsaleAmountOf(uint256 projectId, address userAddress)
+    external
+    view
+    returns (uint256);
 
-  function isWhitelisted(
-    uint256 projectId,
-    address userAddress
-  ) external view returns (bool);
+  function isWhitelisted(uint256 projectId, address userAddress)
+    external
+    view
+    returns (bool);
 
-  function getPresaleSoldAmount(
-    uint256 projectId
-  ) external view returns (uint256);
+  function getPresaleSoldAmount(uint256 projectId)
+    external
+    view
+    returns (uint256);
 
-  function getPublicsaleSoldAmount(
-    uint256 projectId
-  ) external view returns (uint256);
+  function getPublicsaleSoldAmount(uint256 projectId)
+    external
+    view
+    returns (uint256);
 }

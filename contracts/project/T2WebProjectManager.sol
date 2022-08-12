@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -13,7 +13,13 @@ import "../interfaces/IT2WebERC721.sol";
 import "../lib/Signature.sol";
 import "./T2WebERC721.sol";
 
-contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, ReentrancyGuard, ERC721Holder, Ownable {
+contract T2WebProjectManager is
+  IT2WebProjectManager,
+  AccessControlEnumerable,
+  ReentrancyGuard,
+  ERC721Holder,
+  Ownable
+{
   using Strings for uint256;
   using Signature for bytes32;
   using Counters for Counters.Counter;
@@ -24,7 +30,14 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
 
   Counters.Counter private _projectIdTracker;
 
-  enum ProjectState { NEW, READY, CREATED, STARTED, FINISHED, ERROR }
+  enum ProjectState {
+    NEW,
+    READY,
+    CREATED,
+    STARTED,
+    FINISHED,
+    ERROR
+  }
 
   struct Project {
     uint256 id;
@@ -94,10 +107,7 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
     require(saleData[3] > 0 && saleData[8] > 0, "INVALID_DATA");
 
     // Verify sign
-    bytes32 messageHash = keccak256(abi.encodePacked(
-      backendId,
-      msg.sender
-    ));
+    bytes32 messageHash = keccak256(abi.encodePacked(backendId, msg.sender));
 
     messageHash.verifySignature(signature, _signer);
 
@@ -136,7 +146,7 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
 
     _projects[projectId] = project;
 
-    for (uint i = 0; i < whitelists.length; i++) {
+    for (uint256 i = 0; i < whitelists.length; i++) {
       _whitelists[projectId][whitelists[i]] = true;
     }
 
@@ -156,70 +166,94 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
     return projectId;
   }
 
-  function revealProject(
-    uint256 projectId,
-    string memory baseTokenURI
-  ) external {
+  function revealProject(uint256 projectId, string memory baseTokenURI)
+    external
+  {
     Project storage project = _projects[projectId];
 
     require(project.canReveal, "ProjectManager: not allowed");
-    require(project.owner == msg.sender, "ProjectManager: caller is not project owner");
+    require(
+      project.owner == msg.sender,
+      "ProjectManager: caller is not project owner"
+    );
     require(!project.isRevealed, "ProjectManager: already revealed");
 
     IT2WebERC721(project.contractAddress).setBaseURI(baseTokenURI);
     project.isRevealed = true;
 
-    emit ProjectRevealed(
-      project.id,
-      project.isRevealed,
-      baseTokenURI
-    );
+    emit ProjectRevealed(project.id, project.isRevealed, baseTokenURI);
   }
 
-  function startProject(
-    uint256 projectId
-  ) external {
+  function startProject(uint256 projectId) external {
     Project storage project = _projects[projectId];
 
-    require(project.owner == msg.sender, "ProjectManager: caller is not project owner");
-    require(project.state == ProjectState.CREATED, "ProjectManager: project state invalid");
+    require(
+      project.owner == msg.sender,
+      "ProjectManager: caller is not project owner"
+    );
+    require(
+      project.state == ProjectState.CREATED,
+      "ProjectManager: project state invalid"
+    );
 
     project.state = ProjectState.STARTED;
 
     emit ProjectStarted(project.id, uint256(project.state));
   }
 
-  function closeProject(
-    uint256 projectId
-  ) external {
+  function closeProject(uint256 projectId) external {
     Project storage project = _projects[projectId];
 
-    require(project.owner == msg.sender || hasRole(OPERATOR_ROLE, msg.sender),
-      "ProjectManager: caller is not project owner or operator");
-    require(project.state != ProjectState.FINISHED, "ProjectManager: project state invalid");
+    require(
+      project.owner == msg.sender || hasRole(OPERATOR_ROLE, msg.sender),
+      "ProjectManager: caller is not project owner or operator"
+    );
+    require(
+      project.state != ProjectState.FINISHED,
+      "ProjectManager: project state invalid"
+    );
 
     project.state = ProjectState.FINISHED;
 
     emit ProjectClosed(project.id, uint256(project.state));
   }
 
-  function buyPresale(
-    uint256 projectId,
-    uint256 amount
-  ) external nonReentrant notZeroAddress(_msgSender()) payable {
+  function buyPresale(uint256 projectId, uint256 amount)
+    external
+    payable
+    nonReentrant
+    notZeroAddress(_msgSender())
+  {
     Project storage project = _projects[projectId];
     address buyer = _msgSender();
 
-    require(project.state == ProjectState.STARTED, "ProjectManager: project state invalid");
-    require(block.timestamp >= project.presaleStartDate &&
-      block.timestamp <= project.presaleEndDate, "PRESALE_NOT_ALLOWED");
-    require(_presaleAmount[project.id][buyer] + amount <= project.presaleMaxPurchase,
-      "AMOUNT_OVER_LIMITATION");
-    require(project.presaleAmount >= project.presaleSold + amount, "AMOUNT_INVALID");
-    require(_whitelists[projectId][buyer], "ProjectManager: caller is not whitelisted");
+    require(
+      project.state == ProjectState.STARTED,
+      "ProjectManager: project state invalid"
+    );
+    require(
+      block.timestamp >= project.presaleStartDate &&
+        block.timestamp <= project.presaleEndDate,
+      "PRESALE_NOT_ALLOWED"
+    );
+    require(
+      _presaleAmount[project.id][buyer] + amount <= project.presaleMaxPurchase,
+      "AMOUNT_OVER_LIMITATION"
+    );
+    require(
+      project.presaleAmount >= project.presaleSold + amount,
+      "AMOUNT_INVALID"
+    );
+    require(
+      _whitelists[projectId][buyer],
+      "ProjectManager: caller is not whitelisted"
+    );
 
     uint256 totalPrice = project.presalePrice * amount;
-    require(msg.value == totalPrice, "ProjectManager: amount does not match with price");
+    require(
+      msg.value == totalPrice,
+      "ProjectManager: amount does not match with price"
+    );
 
     uint256 fee = (totalPrice * project.fee) / A_HUNDRED_PERCENT;
     uint256 payout = totalPrice - fee;
@@ -227,37 +261,49 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
     payable(_feeReceiver).transfer(fee);
     payable(project.owner).transfer(payout);
 
-    for (uint i = 0; i < amount; i++) {
+    for (uint256 i = 0; i < amount; i++) {
       IT2WebERC721(project.contractAddress).mint(buyer);
     }
 
     project.presaleSold += amount;
     _presaleAmount[project.id][buyer] += amount;
 
-    emit ProjectItemPreSold(
-      project.id,
-      buyer,
-      amount,
-      project.presaleSold
-    );
+    emit ProjectItemPreSold(project.id, buyer, amount, project.presaleSold);
   }
 
-  function buy(
-    uint256 projectId,
-    uint256 amount
-  ) external nonReentrant notZeroAddress(_msgSender()) payable {
+  function buy(uint256 projectId, uint256 amount)
+    external
+    payable
+    nonReentrant
+    notZeroAddress(_msgSender())
+  {
     Project storage project = _projects[projectId];
     address buyer = _msgSender();
 
-    require(project.state == ProjectState.STARTED, "ProjectManager: project state invalid");
-    require(block.timestamp >= project.publicsaleStartDate &&
-      block.timestamp <= project.publicsaleEndDate, "PUBLICSALE_NOT_ALLOWED");
-    require(_publicsaleAmount[project.id][buyer] + amount <= project.publicsaleMaxPurchase,
-      "AMOUNT_OVER_LIMITATION");
-    require(project.publicsaleAmount >= project.publicsaleSold + amount, "AMOUNT_INVALID");
+    require(
+      project.state == ProjectState.STARTED,
+      "ProjectManager: project state invalid"
+    );
+    require(
+      block.timestamp >= project.publicsaleStartDate &&
+        block.timestamp <= project.publicsaleEndDate,
+      "PUBLICSALE_NOT_ALLOWED"
+    );
+    require(
+      _publicsaleAmount[project.id][buyer] + amount <=
+        project.publicsaleMaxPurchase,
+      "AMOUNT_OVER_LIMITATION"
+    );
+    require(
+      project.publicsaleAmount >= project.publicsaleSold + amount,
+      "AMOUNT_INVALID"
+    );
 
     uint256 totalPrice = project.publicsalePrice * amount;
-    require(msg.value == totalPrice, "ProjectManager: amount does not match with price");
+    require(
+      msg.value == totalPrice,
+      "ProjectManager: amount does not match with price"
+    );
 
     uint256 fee = (totalPrice * project.fee) / A_HUNDRED_PERCENT;
     uint256 payout = totalPrice - fee;
@@ -265,52 +311,54 @@ contract T2WebProjectManager is IT2WebProjectManager, AccessControlEnumerable, R
     payable(_feeReceiver).transfer(fee);
     payable(project.owner).transfer(payout);
 
-    for (uint i = 0; i < amount; i++) {
+    for (uint256 i = 0; i < amount; i++) {
       IT2WebERC721(project.contractAddress).mint(buyer);
     }
 
     project.publicsaleSold += amount;
     _publicsaleAmount[project.id][buyer] += amount;
 
-    emit ProjectItemSold(
-      project.id,
-      buyer,
-      amount,
-      project.publicsaleSold
-    );
+    emit ProjectItemSold(project.id, buyer, amount, project.publicsaleSold);
   }
 
-  function getPresaleAmountOf(
-    uint256 projectId,
-    address userAddress
-  ) external view returns (uint256) {
+  function getPresaleAmountOf(uint256 projectId, address userAddress)
+    external
+    view
+    returns (uint256)
+  {
     return _presaleAmount[projectId][userAddress];
   }
 
-  function getPublicsaleAmountOf(
-    uint256 projectId,
-    address userAddress
-  ) external view returns (uint256) {
+  function getPublicsaleAmountOf(uint256 projectId, address userAddress)
+    external
+    view
+    returns (uint256)
+  {
     return _publicsaleAmount[projectId][userAddress];
   }
 
-  function isWhitelisted(
-    uint256 projectId,
-    address userAddress
-  ) external view returns (bool) {
+  function isWhitelisted(uint256 projectId, address userAddress)
+    external
+    view
+    returns (bool)
+  {
     return _whitelists[projectId][userAddress];
   }
 
-  function getPresaleSoldAmount(
-    uint256 projectId
-  ) external view returns (uint256) {
+  function getPresaleSoldAmount(uint256 projectId)
+    external
+    view
+    returns (uint256)
+  {
     Project storage project = _projects[projectId];
     return project.presaleSold;
   }
 
-  function getPublicsaleSoldAmount(
-    uint256 projectId
-  ) external view returns (uint256) {
+  function getPublicsaleSoldAmount(uint256 projectId)
+    external
+    view
+    returns (uint256)
+  {
     Project storage project = _projects[projectId];
     return project.publicsaleSold;
   }

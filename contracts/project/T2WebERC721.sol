@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -55,7 +55,10 @@ contract T2WebERC721 is IT2WebERC721, ERC721URIStorage, Ownable {
   }
 
   function burn(uint256 tokenId) public {
-    require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not owner nor approved");
+    require(
+      _isApprovedOrOwner(_msgSender(), tokenId),
+      "ERC721: caller is not owner nor approved"
+    );
     _burn(tokenId);
   }
 }

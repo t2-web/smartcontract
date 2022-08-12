@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "compile": "truffle compile",
+    "deploy:localhost": "npx hardhat run --network localhost scripts/deploy.js",
     "deploy:bsc": "npx hardhat run --network bsc scripts/deploy.js",
     "deploy:rinkeby": "npx hardhat run --network rinkeby scripts/deploy.js",
     "deploy:mumbai": "npx hardhat run --network mumbai scripts/deploy.js",
