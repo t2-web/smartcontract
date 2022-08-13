@@ -41,7 +41,6 @@ contract T2WebProjectManager is
 
   struct Project {
     uint256 id;
-    string name;
     uint256 backendId;
     address owner;
     uint256 contractType; // 721, 1155, 4907
@@ -60,6 +59,7 @@ contract T2WebProjectManager is
     uint256 publicsaleMaxPurchase;
     uint256 publicsaleSold;
     uint256 fee;
+    bool hasWhitelist;
     bool canReveal;
     bool isRevealed;
   }
@@ -70,8 +70,6 @@ contract T2WebProjectManager is
   mapping(uint256 => Project) private _projects;
 
   mapping(uint256 => bool) private _createdProjects;
-
-  mapping(uint256 => mapping(address => bool)) private _whitelists;
 
   mapping(uint256 => mapping(address => uint256)) private _presaleAmount;
 
@@ -98,7 +96,7 @@ contract T2WebProjectManager is
     string memory projectSymbol,
     string memory baseTokenURI,
     uint256[] memory saleData,
-    address[] memory whitelists,
+    bool hasWhitelist,
     bool canReveal,
     bytes calldata signature
   ) external returns (uint256) {
@@ -107,8 +105,19 @@ contract T2WebProjectManager is
     require(saleData[3] > 0 && saleData[8] > 0, "INVALID_DATA");
 
     // Verify sign
-    bytes32 messageHash = keccak256(abi.encodePacked(backendId, msg.sender));
-
+    bytes32 messageHash = keccak256(
+      abi.encodePacked(
+        backendId,
+        msg.sender,
+        saleData[2],
+        saleData[3],
+        saleData[4],
+        saleData[7],
+        saleData[8],
+        saleData[9],
+        saleData[10]
+      )
+    );
     messageHash.verifySignature(signature, _signer);
 
     T2WebERC721 projectContract = new T2WebERC721(
@@ -122,7 +131,6 @@ contract T2WebProjectManager is
 
     Project memory project;
     project.id = projectId;
-    project.name = projectName;
     project.owner = msg.sender;
     project.backendId = backendId;
     project.contractType = 721;
@@ -141,14 +149,11 @@ contract T2WebProjectManager is
     project.publicsaleMaxPurchase = saleData[9];
     project.fee = saleData[10];
 
+    project.hasWhitelist = hasWhitelist;
     project.canReveal = canReveal;
     project.isRevealed = false;
 
     _projects[projectId] = project;
-
-    for (uint256 i = 0; i < whitelists.length; i++) {
-      _whitelists[projectId][whitelists[i]] = true;
-    }
 
     _createdProjects[project.backendId] = true;
 
@@ -184,23 +189,6 @@ contract T2WebProjectManager is
     emit ProjectRevealed(project.id, project.isRevealed, baseTokenURI);
   }
 
-  function startProject(uint256 projectId) external {
-    Project storage project = _projects[projectId];
-
-    require(
-      project.owner == msg.sender,
-      "ProjectManager: caller is not project owner"
-    );
-    require(
-      project.state == ProjectState.CREATED,
-      "ProjectManager: project state invalid"
-    );
-
-    project.state = ProjectState.STARTED;
-
-    emit ProjectStarted(project.id, uint256(project.state));
-  }
-
   function closeProject(uint256 projectId) external {
     Project storage project = _projects[projectId];
 
@@ -218,35 +206,40 @@ contract T2WebProjectManager is
     emit ProjectClosed(project.id, uint256(project.state));
   }
 
-  function buyPresale(uint256 projectId, uint256 amount)
-    external
-    payable
-    nonReentrant
-    notZeroAddress(_msgSender())
-  {
+  function buyPresale(
+    uint256 projectId,
+    uint256 amount,
+    bytes calldata signature
+  ) external payable nonReentrant notZeroAddress(_msgSender()) {
     Project storage project = _projects[projectId];
     address buyer = _msgSender();
 
     require(
-      project.state == ProjectState.STARTED,
+      project.state == ProjectState.CREATED,
       "ProjectManager: project state invalid"
     );
+
     require(
       block.timestamp >= project.presaleStartDate &&
         block.timestamp <= project.presaleEndDate,
       "PRESALE_NOT_ALLOWED"
     );
+
+    // Verify signature if needed
+    if (project.hasWhitelist) {
+      bytes32 messageHash = keccak256(
+        abi.encodePacked(project.backendId, projectId, buyer, amount)
+      );
+      messageHash.verifySignature(signature, _signer);
+    }
+
     require(
       _presaleAmount[project.id][buyer] + amount <= project.presaleMaxPurchase,
       "AMOUNT_OVER_LIMITATION"
     );
     require(
-      project.presaleAmount >= project.presaleSold + amount,
+      project.presaleSold + amount <= project.presaleAmount,
       "AMOUNT_INVALID"
-    );
-    require(
-      _whitelists[projectId][buyer],
-      "ProjectManager: caller is not whitelisted"
     );
 
     uint256 totalPrice = project.presalePrice * amount;
@@ -281,7 +274,7 @@ contract T2WebProjectManager is
     address buyer = _msgSender();
 
     require(
-      project.state == ProjectState.STARTED,
+      project.state == ProjectState.CREATED,
       "ProjectManager: project state invalid"
     );
     require(
@@ -295,7 +288,7 @@ contract T2WebProjectManager is
       "AMOUNT_OVER_LIMITATION"
     );
     require(
-      project.publicsaleAmount >= project.publicsaleSold + amount,
+      project.publicsaleSold + amount <= project.publicsaleAmount,
       "AMOUNT_INVALID"
     );
 
@@ -335,14 +328,6 @@ contract T2WebProjectManager is
     returns (uint256)
   {
     return _publicsaleAmount[projectId][userAddress];
-  }
-
-  function isWhitelisted(uint256 projectId, address userAddress)
-    external
-    view
-    returns (bool)
-  {
-    return _whitelists[projectId][userAddress];
   }
 
   function getPresaleSoldAmount(uint256 projectId)

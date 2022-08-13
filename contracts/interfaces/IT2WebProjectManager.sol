@@ -19,8 +19,6 @@ interface IT2WebProjectManager {
     string baseTokenURI
   );
 
-  event ProjectStarted(uint256 projectId, uint256 state);
-
   event ProjectClosed(uint256 projectId, uint256 state);
 
   event ProjectItemSold(
@@ -43,7 +41,7 @@ interface IT2WebProjectManager {
     string memory projectSymbol,
     string memory baseTokenURI,
     uint256[] memory saleData,
-    address[] memory whitelists,
+    bool hasWhitelist,
     bool canReveal,
     bytes calldata signature
   ) external returns (uint256);
@@ -51,11 +49,13 @@ interface IT2WebProjectManager {
   function revealProject(uint256 projectId, string memory baseTokenURI)
     external;
 
-  function startProject(uint256 projectId) external;
-
   function closeProject(uint256 projectId) external;
 
-  function buyPresale(uint256 projectId, uint256 amount) external payable;
+  function buyPresale(
+    uint256 projectId,
+    uint256 amount,
+    bytes calldata signature
+  ) external payable;
 
   function buy(uint256 projectId, uint256 amount) external payable;
 
@@ -68,11 +68,6 @@ interface IT2WebProjectManager {
     external
     view
     returns (uint256);
-
-  function isWhitelisted(uint256 projectId, address userAddress)
-    external
-    view
-    returns (bool);
 
   function getPresaleSoldAmount(uint256 projectId)
     external
