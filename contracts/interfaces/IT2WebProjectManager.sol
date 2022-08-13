@@ -35,6 +35,12 @@ interface IT2WebProjectManager {
     uint256 totalAmount
   );
 
+  function setOperator(address operator) external;
+
+  function setSigner(address signer) external;
+
+  function setFeeReceiver(address feeReceiver) external;
+
   function createERC721Project(
     uint256 backendId,
     string memory projectName,

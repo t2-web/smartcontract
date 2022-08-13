@@ -88,6 +88,30 @@ contract T2WebProjectManager is
     _feeReceiver = feeReceiver;
   }
 
+  function setOperator(address operator) external {
+    require(
+      hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+      "ProjectManager: caller is not admin"
+    );
+    _setupRole(OPERATOR_ROLE, operator);
+  }
+
+  function setSigner(address signer) external {
+    require(
+      hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+      "ProjectManager: caller is not admin"
+    );
+    _signer = signer;
+  }
+
+  function setFeeReceiver(address feeReceiver) external {
+    require(
+      hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
+      "ProjectManager: caller is not admin"
+    );
+    _feeReceiver = feeReceiver;
+  }
+
   receive() external payable {}
 
   function createERC721Project(
