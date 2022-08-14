@@ -6,7 +6,9 @@ const DEFAULT_CONFIG = {
   T2WebMultiNFT: "",
   T2WebERC4907NFT: "",
   Disperse: "",
-  T2WebProjectManager: "",
+  ProxyAdmin: "",
+  T2WebProjectManagerLogic: "",
+  T2WebProjectManagerProxy: "",
   OPERATOR: "",
   SIGNER: "",
   FEE_RECEIVER: "",
@@ -46,12 +48,46 @@ async function main() {
   // const deployDisperse = await deployUtils.deployContract("Disperse");
   // deployConfig.Disperse = deployDisperse.address;
 
+  const deployProxyAdmin = await deployUtils.deployContractIfNotExist(
+    "T2WebProxyAdmin",
+    deployConfig.ProxyAdmin
+  );
+  deployConfig.ProxyAdmin = deployProxyAdmin.address;
+
   // T2WebProjectManager
-  const deployT2WebProjectManager = await deployUtils.deployContract(
+  const deployT2WebProjectManager = await deployUtils.deployContractIfNotExist(
     "T2WebProjectManager",
+    deployConfig.T2WebProjectManagerLogic,
     [deployConfig.FEE_RECEIVER, deployConfig.SIGNER]
   );
-  deployConfig.T2WebProjectManager = deployT2WebProjectManager.address;
+  deployConfig.T2WebProjectManagerLogic = deployT2WebProjectManager.address;
+
+  const deployT2WebProjectManagerProxy =
+    await deployUtils.deployContractIfNotExist(
+      "T2WebProxy",
+      deployConfig.T2WebProjectManagerProxy,
+      [deployT2WebProjectManager.address, deployProxyAdmin.address, []]
+    );
+  deployConfig.T2WebProjectManagerProxy =
+    deployT2WebProjectManagerProxy.address;
+  console.log(
+    "deployConfig.T2WebProjectManagerProxy :>> ",
+    deployConfig.T2WebProjectManagerProxy
+  );
+
+  if (deployT2WebProjectManagerProxy.isNewDeployed) {
+  } else if (deployT2WebProjectManager.isNewDeployed) {
+    console.log("Upgrade logic", deployConfig);
+    let proxyAdminContract = await hre.ethers.getContractAt(
+      "T2WebProxyAdmin",
+      deployConfig.ProxyAdmin
+    );
+    let tx = await proxyAdminContract.upgrade(
+      deployConfig.T2WebProjectManagerProxy,
+      deployConfig.T2WebProjectManagerLogic
+    );
+    await tx.wait();
+  }
 
   // Write config
   deployUtils.writeConfig(networkName, deployConfig, suffixConfig);
