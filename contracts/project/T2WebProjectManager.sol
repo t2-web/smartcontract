@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // security for non-reentrant
@@ -64,6 +65,8 @@ contract T2WebProjectManager is
     bool isRevealed;
   }
 
+  address immutable _erc721Implementation;
+
   address private _feeReceiver;
   address private _signer;
 
@@ -86,6 +89,8 @@ contract T2WebProjectManager is
     _setupRole(OPERATOR_ROLE, msgSender);
     _signer = signer;
     _feeReceiver = feeReceiver;
+
+    _erc721Implementation = address(new T2WebERC721());
   }
 
   function setOperator(address operator) external {
@@ -144,7 +149,8 @@ contract T2WebProjectManager is
     );
     messageHash.verifySignature(signature, _signer);
 
-    T2WebERC721 projectContract = new T2WebERC721(
+    address contractAddress = Clones.clone(_erc721Implementation);
+    T2WebERC721(contractAddress).initialize(
       projectName,
       projectSymbol,
       baseTokenURI
@@ -158,7 +164,7 @@ contract T2WebProjectManager is
     project.owner = msg.sender;
     project.backendId = backendId;
     project.contractType = 721;
-    project.contractAddress = address(projectContract);
+    project.contractAddress = contractAddress;
     project.state = ProjectState.CREATED;
 
     project.presaleStartDate = saleData[0];

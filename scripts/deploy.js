@@ -30,23 +30,7 @@ async function main() {
 
   deployConfig.OPERATOR = "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE";
   deployConfig.SIGNER = "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE";
-  deployConfig.FEE_RECEIVER = "0xf27527E01508645d79D26324f72A516778838c26"; // key: 8c6e7f8d70554c3358af02ddeb99aad71244bd7cd3b9903fe483e3e3d0bcd69e
-
-  // // ERC-721
-  // const deployT2WebNFT = await deployUtils.deployContract("T2WebNFT");
-  // deployConfig.T2WebNFT = deployT2WebNFT.address;
-
-  // // ERC-1155
-  // const deployT2WebMultiNFT = await deployUtils.deployContract("T2WebMultiNFT");
-  // deployConfig.T2WebMultiNFT = deployT2WebMultiNFT.address;
-
-  // // ERC-4907
-  // const deployT2WebERC4907NFT = await deployUtils.deployContract("T2WebERC4907NFT");
-  // deployConfig.T2WebERC4907NFT = deploT2WebERC4907NFT.address;
-
-  // // Disperse
-  // const deployDisperse = await deployUtils.deployContract("Disperse");
-  // deployConfig.Disperse = deployDisperse.address;
+  deployConfig.FEE_RECEIVER = "0xf27527E01508645d79D26324f72A516778838c26";
 
   const deployProxyAdmin = await deployUtils.deployContractIfNotExist(
     "T2WebProxyAdmin",
@@ -75,8 +59,8 @@ async function main() {
     deployConfig.T2WebProjectManagerProxy
   );
 
-  if (deployT2WebProjectManagerProxy.isNewDeployed) {
-  } else if (deployT2WebProjectManager.isNewDeployed) {
+  // Upgrade logic
+  if (deployT2WebProjectManager.isNewDeployed) {
     console.log("Upgrade logic", deployConfig);
     let proxyAdminContract = await hre.ethers.getContractAt(
       "T2WebProxyAdmin",

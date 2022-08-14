@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../interfaces/IT2WebERC721.sol";
 
-contract T2WebERC721 is IT2WebERC721, ERC721URIStorage, Ownable {
+contract T2WebERC721 is IT2WebERC721, ERC721URIStorageUpgradeable {
   using Strings for uint256;
   using Counters for Counters.Counter;
 
@@ -17,12 +19,13 @@ contract T2WebERC721 is IT2WebERC721, ERC721URIStorage, Ownable {
   address private _operator;
   string private _baseTokenURI;
 
-  constructor(
+  function initialize(
     string memory name,
     string memory symbol,
     string memory baseTokenURI
-  ) ERC721(name, symbol) {
+  ) public initializer {
     _operator = _msgSender();
+    __ERC721_init(name, symbol);
     _setBaseURI(baseTokenURI);
   }
 
