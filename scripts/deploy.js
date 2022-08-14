@@ -1,48 +1,55 @@
 const hre = require("hardhat");
-const deployUtils = require('./deploy.utils');
+const deployUtils = require("./deploy.utils");
 
 const DEFAULT_CONFIG = {
-  T2WebNFT:"",
+  T2WebNFT: "",
   T2WebMultiNFT: "",
   T2WebERC4907NFT: "",
   Disperse: "",
   T2WebProjectManager: "",
   OPERATOR: "",
   SIGNER: "",
-  FEE_RECEIVER: ""
-}
+  FEE_RECEIVER: "",
+};
 
 async function main() {
-  let envName = await deployUtils.promptChoices("Choose environment", ["local", "dev", "prod"]);
+  let envName = await deployUtils.promptChoices("Choose environment", [
+    "local",
+    "dev",
+    "prod",
+  ]);
   let networkName = hre.network.name;
   let suffixConfig = `${envName}`;
-  let deployConfig = deployUtils.loadConfig(networkName, DEFAULT_CONFIG, suffixConfig);
+  let deployConfig = deployUtils.loadConfig(
+    networkName,
+    DEFAULT_CONFIG,
+    suffixConfig
+  );
 
   deployConfig.OPERATOR = "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE";
   deployConfig.SIGNER = "0xf9209B6F49BB9fD73422BA834f4cD444aE7ceacE";
   deployConfig.FEE_RECEIVER = "0xf27527E01508645d79D26324f72A516778838c26"; // key: 8c6e7f8d70554c3358af02ddeb99aad71244bd7cd3b9903fe483e3e3d0bcd69e
 
   // // ERC-721
-  // const deployT2WebNFT = await deployUtils.deployContractIfNotExist("T2WebNFT", deployConfig.T2WebNFT);
+  // const deployT2WebNFT = await deployUtils.deployContract("T2WebNFT");
   // deployConfig.T2WebNFT = deployT2WebNFT.address;
 
   // // ERC-1155
-  // const deployT2WebMultiNFT = await deployUtils.deployContractIfNotExist("T2WebMultiNFT", deployConfig.T2WebMultiNFT);
+  // const deployT2WebMultiNFT = await deployUtils.deployContract("T2WebMultiNFT");
   // deployConfig.T2WebMultiNFT = deployT2WebMultiNFT.address;
 
   // // ERC-4907
-  // const deployT2WebERC4907NFT = await deployUtils.deployContractIfNotExist("T2WebERC4907NFT", deployConfig.T2WebERC4907NFT);
+  // const deployT2WebERC4907NFT = await deployUtils.deployContract("T2WebERC4907NFT");
   // deployConfig.T2WebERC4907NFT = deploT2WebERC4907NFT.address;
 
   // // Disperse
-  // const deployDisperse = await deployUtils.deployContractIfNotExist("Disperse", deployConfig.Disperse);
+  // const deployDisperse = await deployUtils.deployContract("Disperse");
   // deployConfig.Disperse = deployDisperse.address;
 
   // T2WebProjectManager
-  const deployT2WebProjectManager = await deployUtils.deployContractIfNotExist(
+  const deployT2WebProjectManager = await deployUtils.deployContract(
     "T2WebProjectManager",
-    deployConfig.T2WebProjectManager,
-    [ deployConfig.FEE_RECEIVER, deployConfig.SIGNER ]
+    [deployConfig.FEE_RECEIVER, deployConfig.SIGNER]
   );
   deployConfig.T2WebProjectManager = deployT2WebProjectManager.address;
 
