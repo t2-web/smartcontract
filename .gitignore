@@ -1,0 +1,9 @@
+build/contracts/
+bin
+node_modules
+.env
+artifacts
+cache
+.vscode
+.DS_Store
+**/.DS_Store
