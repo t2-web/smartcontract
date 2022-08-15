@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // security for non-reentrant
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
@@ -16,7 +16,7 @@ import "./T2WebERC721.sol";
 
 contract T2WebProjectManager is
   IT2WebProjectManager,
-  AccessControlEnumerable,
+  AccessControl,
   ReentrancyGuard,
   ERC721Holder,
   Ownable

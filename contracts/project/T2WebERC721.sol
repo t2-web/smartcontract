@@ -3,20 +3,25 @@ pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../interfaces/IT2WebERC721.sol";
 
-contract T2WebERC721 is IT2WebERC721, ERC721URIStorageUpgradeable {
+contract T2WebERC721 is
+  IT2WebERC721,
+  ERC721URIStorageUpgradeable,
+  AccessControlUpgradeable
+{
   using Strings for uint256;
   using Counters for Counters.Counter;
 
+  bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
   Counters.Counter private _tokenIdTracker;
 
-  address private _operator;
   string private _baseTokenURI;
 
   function initialize(
@@ -24,9 +29,11 @@ contract T2WebERC721 is IT2WebERC721, ERC721URIStorageUpgradeable {
     string memory symbol,
     string memory baseTokenURI
   ) public initializer {
-    _operator = _msgSender();
     __ERC721_init(name, symbol);
+
     _setBaseURI(baseTokenURI);
+    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    _grantRole(OPERATOR_ROLE, msg.sender);
   }
 
   function currentId() public view virtual returns (uint256) {
@@ -41,15 +48,14 @@ contract T2WebERC721 is IT2WebERC721, ERC721URIStorageUpgradeable {
     _baseTokenURI = baseTokenURI;
   }
 
-  function setBaseURI(string memory baseTokenURI) external {
-    require(_operator == _msgSender(), "ERC721: caller is not operator");
-
+  function setBaseURI(string memory baseTokenURI)
+    external
+    onlyRole(OPERATOR_ROLE)
+  {
     _setBaseURI(baseTokenURI);
   }
 
-  function mint(address to) public returns (uint256) {
-    require(_operator == _msgSender(), "ERC721: caller is not operator");
-
+  function mint(address to) public onlyRole(OPERATOR_ROLE) returns (uint256) {
     _tokenIdTracker.increment();
     uint256 tokenId = _tokenIdTracker.current();
     _safeMint(to, tokenId);
@@ -63,5 +69,14 @@ contract T2WebERC721 is IT2WebERC721, ERC721URIStorageUpgradeable {
       "ERC721: caller is not owner nor approved"
     );
     _burn(tokenId);
+  }
+
+  function supportsInterface(bytes4 interfaceId)
+    public
+    view
+    override(ERC721Upgradeable, AccessControlUpgradeable)
+    returns (bool)
+  {
+    return super.supportsInterface(interfaceId);
   }
 }
