@@ -39,18 +39,18 @@ async function main() {
   deployConfig.ProxyAdmin = deployProxyAdmin.address;
 
   // T2WebProjectManager
-  const deployT2WebProjectManager = await deployUtils.deployContractIfNotExist(
+  const deployT2WebProjectManagerLogic = await deployUtils.deployContractIfNotExist(
     "T2WebProjectManager",
     deployConfig.T2WebProjectManagerLogic,
-    [deployConfig.FEE_RECEIVER, deployConfig.SIGNER]
+    []
   );
-  deployConfig.T2WebProjectManagerLogic = deployT2WebProjectManager.address;
+  deployConfig.T2WebProjectManagerLogic = deployT2WebProjectManagerLogic.address;
 
   const deployT2WebProjectManagerProxy =
     await deployUtils.deployContractIfNotExist(
       "T2WebProxy",
       deployConfig.T2WebProjectManagerProxy,
-      [deployT2WebProjectManager.address, deployProxyAdmin.address, []]
+      [deployConfig.T2WebProjectManagerLogic, deployProxyAdmin.address, []]
     );
   deployConfig.T2WebProjectManagerProxy =
     deployT2WebProjectManagerProxy.address;
@@ -60,7 +60,18 @@ async function main() {
   );
 
   // Upgrade logic
-  if (deployT2WebProjectManager.isNewDeployed) {
+  if (deployT2WebProjectManagerProxy.isNewDeployed) {
+    // Initialize
+    let logicContract = await hre.ethers.getContractAt(
+      "T2WebProjectManager",
+      deployT2WebProjectManagerProxy.address
+    );
+    let tx = await logicContract.initialize(
+      deployConfig.FEE_RECEIVER,
+      deployConfig.SIGNER
+    );
+    await tx.wait();
+  } else if (deployT2WebProjectManagerLogic.isNewDeployed) {
     console.log("Upgrade logic", deployConfig);
     let proxyAdminContract = await hre.ethers.getContractAt(
       "T2WebProxyAdmin",

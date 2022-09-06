@@ -9,7 +9,7 @@
     "deploy:rinkeby": "npx hardhat run --network rinkeby scripts/deploy.js",
     "deploy:mumbai": "npx hardhat run --network mumbai scripts/deploy.js",
     "deploy:shibuya": "npx hardhat run --network shibuya scripts/deploy.js",
-    "test": "truffle test"
+    "test": "npx hardhat test"
   },
   "repository": {
     "type": "git",

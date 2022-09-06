@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // security for non-reentrant
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 import "../interfaces/IT2WebProjectManager.sol";
 import "../interfaces/IT2WebERC721.sol";
@@ -16,10 +18,10 @@ import "./T2WebERC721.sol";
 
 contract T2WebProjectManager is
   IT2WebProjectManager,
-  AccessControl,
-  ReentrancyGuard,
   ERC721Holder,
-  Ownable
+  ReentrancyGuard,
+  AccessControlUpgradeable,
+  OwnableUpgradeable
 {
   using Strings for uint256;
   using Signature for bytes32;
@@ -65,11 +67,12 @@ contract T2WebProjectManager is
     bool isRevealed;
   }
 
-  address immutable _erc721Implementation;
+  address private _erc721Implementation;
 
   address private _feeReceiver;
   address private _signer;
 
+  // project id => project
   mapping(uint256 => Project) private _projects;
 
   mapping(uint256 => bool) private _createdProjects;
@@ -83,7 +86,10 @@ contract T2WebProjectManager is
     _;
   }
 
-  constructor(address feeReceiver, address signer) {
+  function initialize(address feeReceiver, address signer)
+    external
+    initializer
+  {
     address msgSender = _msgSender();
     _setupRole(DEFAULT_ADMIN_ROLE, msgSender);
     _setupRole(OPERATOR_ROLE, msgSender);
