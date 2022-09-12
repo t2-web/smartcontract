@@ -160,7 +160,7 @@ describe("T2WebProjectManager", function () {
     const [operator, project, user1, user2] = await ethers.getSigners();
 
     const backendId = 1;
-    const ts = timestamp();
+    const ts = timestamp() - 10;
     const presalePrice = 2;
     const presaleAmount = 10;
     const presaleMaxPurchase = 2;
@@ -247,7 +247,7 @@ describe("T2WebProjectManager", function () {
     const [operator, project, user1, user2] = await ethers.getSigners();
 
     const backendId = 1;
-    const ts = timestamp();
+    const ts = timestamp() - 10;
     const presalePrice = 0.001;
     const presaleAmount = 10;
     const presaleMaxPurchase = 2;
@@ -322,7 +322,7 @@ describe("T2WebProjectManager", function () {
     const [operator, project, user1, user2] = await ethers.getSigners();
 
     const backendId = 1;
-    const ts = timestamp();
+    const ts = timestamp() - 10;
     const presalePrice = 0.001;
     const presaleAmount = 10;
     const presaleMaxPurchase = 2;
@@ -391,5 +391,87 @@ describe("T2WebProjectManager", function () {
     });
 
     expect(await projectContract.balanceOf(user1.address)).to.equal(`${1}`);
+  });
+
+  it("Test random mint", async function () {
+    const [operator, project, user1, user2] = await ethers.getSigners();
+
+    const backendId = 1;
+    const ts = timestamp() - 10;
+    const presalePrice = 0;
+    const presaleAmount = 100;
+    const presaleMaxPurchase = 6000;
+    const publicsalePrice = 0.002;
+    const publicsaleAmount = 0;
+    const publicsaleMaxPurchase = 0;
+    const fee = 0;
+
+    const saleData = [
+      ts,
+      ts + 3600 * 1,
+      ethers.utils.parseEther(`${presalePrice}`),
+      presaleAmount,
+      presaleMaxPurchase,
+      ts + 3600 * 2,
+      ts + 3600 * 3,
+      ethers.utils.parseEther(`${publicsalePrice}`),
+      publicsaleAmount,
+      publicsaleMaxPurchase,
+      fee,
+    ];
+    const hasWhitelist = false;
+    const canReveal = true;
+
+    const sign = await getSignature(signer.privateKey, {
+      backendId,
+      owner: project.address.toLowerCase(),
+      presalePrice: ethers.utils.parseEther(`${presalePrice}`).toString(),
+      presaleAmount,
+      presaleMaxPurchase,
+      publicsalePrice: ethers.utils.parseEther(`${publicsalePrice}`).toString(),
+      publicsaleAmount,
+      publicsaleMaxPurchase,
+      fee,
+    });
+
+    const tx = await projectManager
+      .connect(project)
+      .createERC721Project(
+        backendId,
+        "Test 1",
+        "T2WEB",
+        "ipfs://t2web",
+        saleData,
+        hasWhitelist,
+        canReveal,
+        sign.signature
+      );
+
+    let receipt = await tx.wait();
+    let txLog = receipt.events[3];
+    const projectId = txLog.args.projectId;
+    const contractAddress = txLog.args.contractAddress;
+    expect(projectId).to.equal("1");
+
+    console.log(`contractAddress:${contractAddress}`);
+
+    projectContract = await ethers.getContractAt(
+      "T2WebERC721",
+      contractAddress
+    );
+
+    expect(await projectContract.balanceOf(user1.address)).to.equal(`${0}`);
+
+    for (let i = 0; i < presaleAmount/2; i = i + 1) {
+      await projectManager.connect(user1).buyPresale(projectId, 2, 0, {
+        value: ethers.utils.parseEther(`${2 * presalePrice}`),
+      });
+
+      console.log(`balanceOf:`, await projectContract.balanceOf(user1.address));
+    }
+
+    expect(await projectContract.balanceOf(user1.address)).to.equal(
+      `${presaleAmount}`
+    );
   });
 });

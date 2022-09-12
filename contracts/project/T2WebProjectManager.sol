@@ -99,14 +99,6 @@ contract T2WebProjectManager is
     _erc721Implementation = address(new T2WebERC721());
   }
 
-  function setOperator(address operator) external {
-    require(
-      hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-      "ProjectManager: caller is not admin"
-    );
-    _setupRole(OPERATOR_ROLE, operator);
-  }
-
   function setSigner(address signer) external {
     require(
       hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
@@ -135,10 +127,6 @@ contract T2WebProjectManager is
     bool canReveal,
     bytes calldata signature
   ) external returns (uint256) {
-    require(_createdProjects[backendId] == false, "KNOWN_TX");
-    require(saleData.length == 11, "INVALID_DATA");
-    require(saleData[3] > 0 && saleData[8] > 0, "INVALID_DATA");
-
     // Verify sign
     bytes32 messageHash = keccak256(
       abi.encodePacked(
@@ -155,11 +143,21 @@ contract T2WebProjectManager is
     );
     messageHash.verifySignature(signature, _signer);
 
+    require(_createdProjects[backendId] == false, "KNOWN_TX");
+    require(saleData.length == 11, "INVALID_DATA");
+
+    uint256 totalSupply = saleData[3] + saleData[8];
+    require(
+      totalSupply > 0,
+      "ProjectManager: total supply must be greater than 0"
+    );
+
     address contractAddress = Clones.clone(_erc721Implementation);
     T2WebERC721(contractAddress).initialize(
       projectName,
       projectSymbol,
-      baseTokenURI
+      baseTokenURI,
+      totalSupply
     );
 
     _projectIdTracker.increment();

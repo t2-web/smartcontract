@@ -20,24 +20,29 @@ contract T2WebERC721 is
 
   bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-  Counters.Counter private _tokenIdTracker;
+  uint256 private _salt =
+    uint256(keccak256(abi.encodePacked("Welc0me_2_ToW3b")));
+
+  mapping(uint256 => bool) private _mintedIds;
 
   string private _baseTokenURI;
+  uint256 private _mintedCount;
+
+  uint256 public totalSupply;
 
   function initialize(
-    string memory name,
-    string memory symbol,
-    string memory baseTokenURI
+    string memory name_,
+    string memory symbol_,
+    string memory baseTokenURI_,
+    uint256 totalSupply_
   ) public initializer {
-    __ERC721_init(name, symbol);
+    __ERC721_init(name_, symbol_);
 
-    _setBaseURI(baseTokenURI);
+    totalSupply = totalSupply_;
+    _mintedCount = 0;
+    _setBaseURI(baseTokenURI_);
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _grantRole(OPERATOR_ROLE, msg.sender);
-  }
-
-  function currentId() public view virtual returns (uint256) {
-    return _tokenIdTracker.current();
   }
 
   function _baseURI() internal view virtual override returns (string memory) {
@@ -56,10 +61,30 @@ contract T2WebERC721 is
   }
 
   function mint(address to) public onlyRole(OPERATOR_ROLE) returns (uint256) {
-    _tokenIdTracker.increment();
-    uint256 tokenId = _tokenIdTracker.current();
+    uint256 remainingCount = totalSupply - _mintedCount;
+    uint256[] memory remainingIds = new uint256[](remainingCount);
+    uint256 j = 0;
+    for (uint256 i = 1; i <= totalSupply; i++) {
+      if (!_mintedIds[i]) {
+        remainingIds[j] = i;
+        j++;
+      }
+    }
+
+    uint256 idx = _randomNumber(
+      uint256(keccak256(abi.encodePacked(remainingCount)))
+    ) % remainingCount;
+
+    uint256 tokenId = remainingIds[idx];
+
+    require(!_mintedIds[tokenId], "ERC721: already exists");
+
     _safeMint(to, tokenId);
     _setTokenURI(tokenId, tokenId.toString());
+
+    _mintedIds[tokenId] = true;
+    _mintedCount = _mintedCount + 1;
+
     return tokenId;
   }
 
@@ -78,5 +103,9 @@ contract T2WebERC721 is
     returns (bool)
   {
     return super.supportsInterface(interfaceId);
+  }
+
+  function _randomNumber(uint256 sugar) internal view returns (uint256) {
+    return uint256(keccak256(abi.encodePacked(block.timestamp, _salt, sugar)));
   }
 }
