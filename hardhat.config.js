@@ -46,11 +46,6 @@ module.exports = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
-    rinkeby: {
-      url: process.env.RINKEBY_NODE_URL,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
     bsc: {
       url: process.env.BSC_NODE_URL,
       accounts:
@@ -58,6 +53,21 @@ module.exports = {
     },
     shibuya: {
       url: process.env.ASTAR_NODE_URL,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    goerli: {
+      url: process.env.GOERLI_NODE_URL,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    sandverse: {
+      url: process.env.SAND_VERSE_NODE_URL,
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
+    mchverse: {
+      url: process.env.MCH_VERSE_NODE_URL,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },

@@ -4,11 +4,18 @@
   "description": "",
   "scripts": {
     "compile": "truffle compile",
-    "deploy:localhost": "npx hardhat run --network localhost scripts/deploy.js",
+    "deploy:localhost": "npx hardhat run --network localhost scripts/deploy-disperse.js",
     "deploy:bsc": "npx hardhat run --network bsc scripts/deploy.js",
-    "deploy:rinkeby": "npx hardhat run --network rinkeby scripts/deploy.js",
+    "deploy:goerli": "npx hardhat run --network goerli scripts/deploy.js",
     "deploy:mumbai": "npx hardhat run --network mumbai scripts/deploy.js",
     "deploy:shibuya": "npx hardhat run --network shibuya scripts/deploy.js",
+    "deploy:sandverse": "npx hardhat run --network sandverse scripts/deploy.js",
+    "deploy-nft:bsc": "npx hardhat run --network bsc scripts/deploy-nft.js",
+    "deploy-nft:shibuya": "npx hardhat run --network shibuya scripts/deploy-nft.js",
+    "deploy-nft:mumbai": "npx hardhat run --network mumbai scripts/deploy-nft.js",
+    "deploy-nft:goerli": "npx hardhat run --network goerli scripts/deploy-nft.js",
+    "deploy-nft:sandverse": "npx hardhat run --network sandverse scripts/deploy-nft.js",
+    "deploy-nft:mchverse": "npx hardhat run --network mchverse scripts/deploy-nft.js",
     "test": "npx hardhat test"
   },
   "repository": {
