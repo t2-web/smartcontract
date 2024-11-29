@@ -35,41 +35,46 @@ module.exports = {
     hardhat: {
       gasPrice: 875000000,
     },
-    mumbai: {
-      url: process.env.MUMBAI_NODE_URL || "https://rpc-mumbai.matic.today",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-    polygon: {
-      url: process.env.RPC_POLYGON_URL || "https://polygon-rpc.com",
-      gasPrice: 45000000000,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-    bsc: {
-      url: process.env.BSC_NODE_URL,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-    shibuya: {
-      url: process.env.ASTAR_NODE_URL,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-    goerli: {
-      url: process.env.GOERLI_NODE_URL,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-    sandverse: {
-      url: process.env.SAND_VERSE_NODE_URL,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-    mchverse: {
-      url: process.env.MCH_VERSE_NODE_URL,
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // mumbai: {
+    //   url: process.env.MUMBAI_NODE_URL || "https://rpc-mumbai.matic.today",
+    //   accounts:
+    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // },
+    // polygon: {
+    //   url: process.env.RPC_POLYGON_URL || "https://polygon-rpc.com",
+    //   gasPrice: 45000000000,
+    //   accounts:
+    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // },
+    // bsc: {
+    //   url: process.env.BSC_NODE_URL,
+    //   accounts:
+    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // },
+    // shibuya: {
+    //   url: process.env.ASTAR_NODE_URL,
+    //   accounts:
+    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // },
+    // goerli: {
+    //   url: process.env.GOERLI_NODE_URL,
+    //   accounts:
+    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // },
+    // sandverse: {
+    //   url: process.env.SAND_VERSE_NODE_URL,
+    //   accounts:
+    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // },
+    // mchverse: {
+    //   url: process.env.MCH_VERSE_NODE_URL,
+    //   accounts:
+    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    // },
+    defiverse: {
+      // url: "https://rpc-testnet.defi-verse.org/",
+      url: "https://rpc.defi-verse.org/",
+      accounts: [process.env.PRIVATE_KEY],
     },
   },
   gasReporter: {
@@ -77,6 +82,18 @@ module.exports = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      "defiverse": "no key",
+    },
+    customChains: [      
+      {
+        network: "defiverse",
+        chainId: 16116,
+        urls: {
+          apiURL: "https://scan.defi-verse.org/api",
+          browserURL: "https://scan.defi-verse.org",
+        },
+      },
+    ],
   },
 };

@@ -12,5 +12,5 @@ module.exports = function (deployer) {
   // deployer.deploy(T2WebMultiNFT, BASE_URI, "");
 
   console.log("Deploying T2WebERC4907NFT...");
-  deployer.deploy(T2WebERC4907NFT, "T2WEB NFT", "T2WEB", BASE_URI);
+  // deployer.deploy(T2WebERC4907NFT, "T2WEB NFT", "T2WEB", BASE_URI);
 };

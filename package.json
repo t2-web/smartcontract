@@ -16,6 +16,8 @@
     "deploy-nft:goerli": "npx hardhat run --network goerli scripts/deploy-nft.js",
     "deploy-nft:sandverse": "npx hardhat run --network sandverse scripts/deploy-nft.js",
     "deploy-nft:mchverse": "npx hardhat run --network mchverse scripts/deploy-nft.js",
+    "deploy-nft:defiverse": "npx hardhat run --network defiverse scripts/deploy-nft.js",
+
     "deploy-token:sandverse": "npx hardhat run --network sandverse scripts/deploy-token.js",
     "test": "npx hardhat test"
   },
